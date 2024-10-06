@@ -173,38 +173,33 @@ static void unrealize (GtkWidget *widget){
 
 }
 
-// static gboolean key_handler(GtkWidget* widget, GdkEvent* event, gpointer user_data){
-//     switch(gdk_key_event_get_keyval(event)){
-//         case GDK_KEY_A: case GDK_KEY_a: xoffset -= 0.5; break;
-//         case GDK_KEY_F: case GDK_KEY_f: xoffset += 0.5; break;
-//         case GDK_KEY_S: case GDK_KEY_s: yoffset += 0.5; break;
-//         case GDK_KEY_D: case GDK_KEY_d: yoffset -= 0.5; break;
-//         default: break;
-//     }
-//     return TRUE;
-// }
 
-// gboolean key_pressed (GtkEventControllerKey* self, guint keyval, guint keycode, GdkModifierType state, gpointer user_data){
-//     std::cout << gtk_event_controller_key_get_group(self);
-//     std::cout << "\nkey_pressed was called\n";
-//     return TRUE;
-// }
+gboolean key_pressed(GtkEventControllerKey* self, guint keyval, guint keycode, GdkModifierType state, gpointer user_data){
+    if(keyval == GDK_KEY_Left){
+        xoffset += 0.2;
+    }
+    else if(keyval == GDK_KEY_Right){
+        xoffset -= 0.2;
+    }
+    else if(keyval == GDK_KEY_Up){
+        yoffset -= 0.2;
+    }
+    else if(keyval == GDK_KEY_Down){
+        yoffset += 0.2;
+    }
 
-void inc_x(GtkButton* self, gpointer user_data){
-    xoffset += 0.5;
+    gtk_gl_area_queue_render(GTK_GL_AREA(gl_area));
+    return TRUE;
 }
 
-void dec_x(GtkButton* self, gpointer user_data){
-    xoffset -= 0.5;
+gboolean scroll(GtkEventControllerScroll* self, gdouble dx, gdouble dy, gpointer user_data){
+    xoffset -= dx;
+    yoffset += dy;
+    gtk_gl_area_queue_render(GTK_GL_AREA(gl_area));
+    return TRUE;
 }
 
-void inc_y(GtkButton* self, gpointer user_data){
-    yoffset += 0.5;
-}
 
-void dec_y(GtkButton* self, gpointer user_data){
-    yoffset -= 0.5;
-}
 
 static gboolean render(GtkGLArea *area, GdkGLContext *context){
     if (gtk_gl_area_get_error (area) != NULL){
@@ -236,6 +231,10 @@ static gboolean render(GtkGLArea *area, GdkGLContext *context){
     return TRUE;
 }
 
+void resize(GtkGLArea* self, gint width, gint height, gpointer user_data){
+    std::cout << "width: " << width << "\nheight: " << height << "\n";
+}
+
 void activate(GtkApplication* app, gpointer user_data){
     GtkWidget *window, *box, *button;
 
@@ -245,11 +244,11 @@ void activate(GtkApplication* app, gpointer user_data){
     // g_signal_connect(window, "destroy", G_CALLBACK(close_window), NULL);
 
     box = gtk_box_new(GTK_ORIENTATION_VERTICAL, FALSE);
-    // gtk_widget_set_margin_start (box, 12);
-    // gtk_widget_set_margin_end (box, 12);
-    // gtk_widget_set_margin_top (box, 12);
-    // gtk_widget_set_margin_bottom (box, 12);
-    // gtk_box_set_spacing (GTK_BOX (box), 6);
+    gtk_widget_set_margin_start (box, 12);
+    gtk_widget_set_margin_end (box, 12);
+    gtk_widget_set_margin_top (box, 12);
+    gtk_widget_set_margin_bottom (box, 12);
+    gtk_box_set_spacing (GTK_BOX (box), 6);
     gtk_window_set_child (GTK_WINDOW (window), box);
 
     gl_area = gtk_gl_area_new();
@@ -264,27 +263,19 @@ void activate(GtkApplication* app, gpointer user_data){
     g_signal_connect(gl_area, "realize", G_CALLBACK(realize), NULL);
     g_signal_connect(gl_area, "unrealize", G_CALLBACK(unrealize), NULL);
     g_signal_connect(gl_area, "render", G_CALLBACK(render), NULL);
+    g_signal_connect(gl_area, "resize", G_CALLBACK(resize), NULL);
 
-    button = gtk_button_new_with_label("+x");
-    gtk_box_append(GTK_BOX(box), button);
-    g_signal_connect(button, "clicked", G_CALLBACK(inc_x), NULL);
+    GtkEventController *event_controller;
+    event_controller = gtk_event_controller_key_new();
 
-    button = gtk_button_new_with_label("-x");
-    gtk_box_append(GTK_BOX(box), button);
-    g_signal_connect(button, "clicked", G_CALLBACK(dec_x), NULL);
+    g_signal_connect_object (event_controller, "key-pressed", G_CALLBACK(key_pressed), window, G_CONNECT_SWAPPED);
+    gtk_widget_add_controller (GTK_WIDGET (window), event_controller);
 
-    button = gtk_button_new_with_label("+y");
-    gtk_box_append(GTK_BOX(box), button);
-    g_signal_connect(button, "clicked", G_CALLBACK(inc_y), NULL);
+    GtkEventController * scroll_controller;
+    scroll_controller = gtk_event_controller_scroll_new(GTK_EVENT_CONTROLLER_SCROLL_BOTH_AXES);
 
-    button = gtk_button_new_with_label("-y");
-    gtk_box_append(GTK_BOX(box), button);
-    g_signal_connect(button, "clicked", G_CALLBACK(dec_y), NULL);
-
-    // GtkEventController* event_controller = gtk_event_controller_key_new();
-    // gtk_event_controller_key_get_type()
-
-    // g_signal_connect(event_controller, "key-press-event", G_CALLBACK(key_pressed), NULL);
+    g_signal_connect_object(scroll_controller, "scroll", G_CALLBACK(scroll), window, G_CONNECT_SWAPPED);
+    gtk_widget_add_controller(window, scroll_controller);
 
     gtk_window_present(GTK_WINDOW(window));
 }
