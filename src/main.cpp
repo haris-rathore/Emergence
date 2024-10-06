@@ -12,6 +12,9 @@ static GtkWidget* gl_area = NULL;
 Shader* shader;
 float xoffset = -1;
 float yoffset = -1;
+float xratio = 1;
+float yratio = 1;
+float zoom = 1;
 
 struct Cell{
     int x;
@@ -141,6 +144,9 @@ void realize (GtkWidget *widget){
         }
     }
 
+
+    
+
     vertices = make_vertices(grid);
     indices = make_indices(vertices);
     GLuint VBO;
@@ -210,9 +216,12 @@ static gboolean render(GtkGLArea *area, GdkGLContext *context){
     g_signal_connect_swapped(frame_clock, "update", G_CALLBACK(gtk_gl_area_queue_render), gl_area);
     gdk_frame_clock_begin_updating(frame_clock);
 
-    shader->setFloat("scalar", 2.0f/COLUMNS);
+    // shader->setFloat("scalar", 2.0f/COLUMNS);
     shader->setFloat("xoffset", xoffset);
     shader->setFloat("yoffset", yoffset);
+    shader->setFloat("xratio", xratio);
+    shader->setFloat("yratio", yratio);
+    shader->setFloat("zoom", zoom);
 
     glClear(GL_COLOR_BUFFER_BIT);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -232,7 +241,14 @@ static gboolean render(GtkGLArea *area, GdkGLContext *context){
 }
 
 void resize(GtkGLArea* self, gint width, gint height, gpointer user_data){
-    std::cout << "width: " << width << "\nheight: " << height << "\n";
+    // std::cout << "width: " << width << "\nheight: " << height << "\n";
+    xratio = static_cast<float>(COLUMNS) / (4 * width);
+    yratio = static_cast<float>(ROWS) / (4 * height);
+}
+
+void zoom_handler(GtkGestureZoom* self, gdouble scale, gpointer user_data){
+    // std::cout << "scale: " << scale << "\n";
+    zoom += (scale - 1) * 0.1;
 }
 
 void activate(GtkApplication* app, gpointer user_data){
@@ -276,6 +292,10 @@ void activate(GtkApplication* app, gpointer user_data){
 
     g_signal_connect_object(scroll_controller, "scroll", G_CALLBACK(scroll), window, G_CONNECT_SWAPPED);
     gtk_widget_add_controller(window, scroll_controller);
+
+    GtkGesture* zoom_controller = gtk_gesture_zoom_new();
+    g_signal_connect_object(zoom_controller, "scale-changed", G_CALLBACK(zoom_handler), window, G_CONNECT_SWAPPED);
+    gtk_widget_add_controller(window, GTK_EVENT_CONTROLLER(zoom_controller));
 
     gtk_window_present(GTK_WINDOW(window));
 }
