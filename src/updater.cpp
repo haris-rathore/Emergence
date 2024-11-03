@@ -93,7 +93,6 @@ std::vector<unsigned int> Updater::make_indices(std::vector<int>& vertices){
 
 void Updater::update(){
     while(Renderer::running){
-        // std::cout << "hi\n";
         if(Application::Queue.size() < 10){
             nextGeneration(grid);
             render_data to_push;

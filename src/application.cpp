@@ -47,12 +47,6 @@ void Application::activate(GtkApplication* app, gpointer user_data){
     g_signal_connect(gl_area, "render", G_CALLBACK(Renderer::render), NULL);
     g_signal_connect(gl_area, "resize", G_CALLBACK(resize), NULL);
 
-    GtkEventController *event_controller;
-    event_controller = gtk_event_controller_key_new();
-
-    g_signal_connect_object (event_controller, "key-pressed", G_CALLBACK(key_pressed), window, G_CONNECT_SWAPPED);
-    gtk_widget_add_controller (GTK_WIDGET (window), event_controller);
-
     GtkEventController * scroll_controller;
     scroll_controller = gtk_event_controller_scroll_new(GTK_EVENT_CONTROLLER_SCROLL_BOTH_AXES);
 
@@ -67,43 +61,22 @@ void Application::activate(GtkApplication* app, gpointer user_data){
 }
 
 void Application::resize(GtkGLArea* self, gint width, gint height, gpointer user_data){
-    // std::cout << "width: " << width << "\nheight: " << height << "\n";
-    Renderer::xratio = static_cast<float>(Updater::COLUMNS) / (4 * width);
-    Renderer::yratio = static_cast<float>(Updater::ROWS) / (4 * height);
+    _width = width;
+    _height = height;
 }
 
 void Application::zoom_handler(GtkGestureZoom* self, gdouble scale, gpointer user_data){
-    // std::cout << "scale: " << scale << "\n";
-    Renderer::zoom += (scale - 1) * 0.05;
-    if(Renderer::zoom < 0.01){
+    Renderer::zoom += (scale - 1) * 0.2;
+    if(Renderer::zoom > _width / 50){
+        Renderer::zoom = _width / 50;
+    }
+    else if(Renderer::zoom < 0.01){
         Renderer::zoom = 0.01;
     }
-    else if(Renderer::zoom > 2.5){
-        Renderer::zoom = 2.5;
-    }
-    // std::cout << "zoom: " << zoom << "\n";
-}
-
-gboolean Application::key_pressed(GtkEventControllerKey* self, guint keyval, guint keycode, GdkModifierType state, gpointer user_data){
-    if(keyval == GDK_KEY_Left){
-        Renderer::xoffset += 0.2;
-    }
-    else if(keyval == GDK_KEY_Right){
-        Renderer::xoffset -= 0.2;
-    }
-    else if(keyval == GDK_KEY_Up){
-        Renderer::yoffset -= 0.2;
-    }
-    else if(keyval == GDK_KEY_Down){
-        Renderer::yoffset += 0.2;
-    }
-    gtk_gl_area_queue_render(GTK_GL_AREA(gl_area));
-    return TRUE;
 }
 
 gboolean Application::scroll(GtkEventControllerScroll* self, gdouble dx, gdouble dy, gpointer user_data){
-    Renderer::xoffset -= dx;
-    Renderer::yoffset += dy;
+    Renderer::cameraPos += glm::vec3(dx * 20 / Renderer::zoom, -dy * 20 / Renderer::zoom, 0);
     gtk_gl_area_queue_render(GTK_GL_AREA(gl_area));
     return TRUE;
 }

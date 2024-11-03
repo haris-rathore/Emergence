@@ -1,38 +1,11 @@
 #include "renderer.hpp"
-
-Renderer::Renderer(){
-    // shader = new Shader();
-}
-
-// void Renderer::update(){
-//     while(running){
-//         if(Queue.size() < 10){
-//             nextGeneration(grid);
-//             render_data to_push;
-//             to_push.vertices = make_vertices(grid);
-//             to_push.indices = make_indices(vertices);
-//             Queue.push(to_push);
-//         }
-//     }
-// }
-
+    
 void Renderer::realize(GtkWidget *widget){
     running = true;
-    xoffset = -1.0f;
-    yoffset = -1.0f;
-    xratio = 1.0f;
-    yratio = 1.0f;
-    zoom = 1.0f;
-    update_speed = std::chrono::nanoseconds(100'000'000);
 
-    GdkGLContext *context;
     gtk_gl_area_make_current (GTK_GL_AREA (widget));
     if (gtk_gl_area_get_error (GTK_GL_AREA (widget)) != NULL)
         return;
-    context = gtk_gl_area_get_context (GTK_GL_AREA (widget));
-    int major, minor;
-    gtk_gl_area_get_required_version (GTK_GL_AREA(widget), &major, &minor);
-    std::cout << "major: " << major << "minor: " << minor << '\n'; 
 
     srand(time(0));
     for(int y = 0; y < GRID_SIZE; y++){
@@ -91,20 +64,19 @@ gboolean Renderer::render(GtkGLArea *area, GdkGLContext *context){
     g_signal_connect_swapped(frame_clock, "update", G_CALLBACK(gtk_gl_area_queue_render), area);
     gdk_frame_clock_begin_updating(frame_clock);
 
-    // std::cout << "fps: " << gdk_frame_clock_get_fps(frame_clock) << '\n';
 
-    // shader->setFloat("scalar", 2.0f/COLUMNS);
-    shader->setFloat("xoffset", xoffset);
-    shader->setFloat("yoffset", yoffset);
-    shader->setFloat("xratio", xratio);
-    shader->setFloat("yratio", yratio);
-    shader->setFloat("zoom", zoom);
+    projection = glm::ortho(-Application::_width / (2 * zoom), Application::_width / (2 * zoom), -Application::_height / (2 * zoom), Application::_height / (2 * zoom), -1.0f, 10.0f);
+    glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+
+    glUniformMatrix4fv(glGetUniformLocation(shader->id, "projection"), 1, GL_FALSE, &projection[0][0]);
+    glUniformMatrix4fv(glGetUniformLocation(shader->id, "view"), 1, GL_FALSE, &view[0][0]);
+    
 
     auto new_frame = std::chrono::steady_clock::now();
 
     auto duration = new_frame - last_frame;
     if(duration > update_speed && !Application::Queue.empty()){
-        std::cout << "compute rate: " << 1'000'000'000.0 / duration.count() << '\n';
+        // std::cout << "compute rate: " << 1'000'000'000.0 / duration.count() << '\n';
         Updater::vertices = Application::Queue.front().vertices;
         Updater::indices = Application::Queue.front().indices;
         Application::Queue.pop();
@@ -120,6 +92,5 @@ gboolean Renderer::render(GtkGLArea *area, GdkGLContext *context){
     glEnableVertexAttribArray(0);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, Updater::indices.size() * sizeof(int), Updater::indices.data(), GL_STATIC_DRAW);
 
-    // std::this_thread::sleep_for(std::chrono::milliseconds(200));
     return TRUE;
 }

@@ -3,20 +3,11 @@
 Shader::Shader(){
     const std::string vertex_source = R"(
     #version 330 core
-
     layout (location = 0) in vec2 aPos;
-    uniform float xratio;
-    uniform float yratio;
-    uniform float xoffset;
-    uniform float yoffset;
-    uniform float zoom;
+    uniform mat4 projection;
+    uniform mat4 view;
     void main(){
-        vec4 c1 = vec4(xratio * zoom, 0, 0, 0);
-        vec4 c2 = vec4(0, yratio * zoom, 0, 0);
-        vec4 c3 = vec4(0, 0, 1, 0);
-        vec4 c4 = vec4(xoffset, yoffset, 0, 1);
-        mat4 transformation = mat4(c1, c2, c3, c4);
-        gl_Position = transformation * vec4(aPos, 0.0, 1.0);
+        gl_Position = projection * view * vec4(aPos, 0.0, 1.0);
     }
     )";
 

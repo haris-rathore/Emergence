@@ -2,7 +2,6 @@
 #define SHADER_H
 
 #include <epoxy/gl.h>
-// #include "glad/glad.h"
 #include <iostream>
 #include <string>
 #include <fstream>
