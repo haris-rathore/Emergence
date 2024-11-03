@@ -45,6 +45,10 @@ void Renderer::realize(GtkWidget *widget){
     glEnableVertexAttribArray(0);
     shader = new Shader();
     shader->use();
+
+    GdkFrameClock *frame_clock = gtk_widget_get_frame_clock(GTK_WIDGET(Application::gl_area));
+    g_signal_connect_swapped(frame_clock, "update", G_CALLBACK(gtk_gl_area_queue_render), Application::gl_area);
+    gdk_frame_clock_begin_updating(frame_clock);
 }
 
 void Renderer::unrealize(GtkWidget *widget){
@@ -60,10 +64,6 @@ gboolean Renderer::render(GtkGLArea *area, GdkGLContext *context){
         std::cout << "failed\n";
         return FALSE;
     }
-    GdkFrameClock *frame_clock = gtk_widget_get_frame_clock(GTK_WIDGET(area));
-    g_signal_connect_swapped(frame_clock, "update", G_CALLBACK(gtk_gl_area_queue_render), area);
-    gdk_frame_clock_begin_updating(frame_clock);
-
 
     projection = glm::ortho(-Application::_width / (2 * zoom), Application::_width / (2 * zoom), -Application::_height / (2 * zoom), Application::_height / (2 * zoom), -1.0f, 10.0f);
     glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
