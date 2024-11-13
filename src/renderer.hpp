@@ -8,6 +8,7 @@
 #include <set>
 #include <queue>
 #include <thread>
+#include <mutex>
 #include <chrono>
 #include "../glm/glm.hpp"
 #include "../glm/gtc/matrix_transform.hpp"

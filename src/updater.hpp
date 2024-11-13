@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <set>
+#include <mutex>
 #include "renderer.hpp"
 
 struct Cell{

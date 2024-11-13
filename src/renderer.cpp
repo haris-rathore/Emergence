@@ -19,10 +19,13 @@ void Renderer::realize(GtkWidget *widget){
     render_data to_push;
     to_push.vertices = Updater::make_vertices(Updater::grid);
     to_push.indices = Updater::make_indices(Updater::vertices);
+    Application::q_tex.lock();
     Application::Queue.push(to_push);
     Application::update_thread = std::thread(Updater::update);
     Updater::vertices = Application::Queue.front().vertices;
     Updater::indices = Application::Queue.front().indices;
+    Application::Queue.pop();
+    Application::q_tex.unlock();
     last_frame = std::chrono::steady_clock::now();
    
     GLuint VBO;
@@ -75,13 +78,15 @@ gboolean Renderer::render(GtkGLArea *area, GdkGLContext *context){
     auto new_frame = std::chrono::steady_clock::now();
 
     auto duration = new_frame - last_frame;
+    Application::q_tex.lock();
     if(duration > update_speed && !Application::Queue.empty()){
-        // std::cout << "compute rate: " << 1'000'000'000.0 / duration.count() << '\n';
+        std::cout << "compute rate: " << 1'000'000'000.0 / duration.count() << '\n';
         Updater::vertices = Application::Queue.front().vertices;
         Updater::indices = Application::Queue.front().indices;
         Application::Queue.pop();
         last_frame = new_frame;
     }
+    Application::q_tex.unlock();
 
     glClear(GL_COLOR_BUFFER_BIT);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);

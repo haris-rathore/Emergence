@@ -93,12 +93,17 @@ std::vector<unsigned int> Updater::make_indices(std::vector<int>& vertices){
 
 void Updater::update(){
     while(Renderer::running){
-        if(Application::Queue.size() < 10){
+        Application::q_tex.lock();
+        int q_size = Application::Queue.size();
+        Application::q_tex.unlock();
+        if(q_size < 10){
             nextGeneration(grid);
             render_data to_push;
             to_push.vertices = make_vertices(grid);
             to_push.indices = make_indices(vertices);
+            Application::q_tex.lock();
             Application::Queue.push(to_push);
+            Application::q_tex.unlock();
         }
     }
 }

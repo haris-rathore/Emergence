@@ -3,6 +3,7 @@
 
 #include <gtk/gtk.h>
 #include <string>
+#include <mutex>
 #include "renderer.hpp"
 #include "updater.hpp"
 
@@ -19,6 +20,7 @@ class Application{
     inline static int _height = 800;
     inline static std::queue<render_data> Queue;
     inline static std::thread update_thread;
+    inline static std::mutex q_tex;
 
     int argc;
     char** argv;
