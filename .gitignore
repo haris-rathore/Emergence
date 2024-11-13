@@ -1,5 +1,5 @@
 *.sh
 .vscode
 main
-old*
 glm
+all*
