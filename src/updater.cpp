@@ -9,6 +9,84 @@ bool operator<(const Cell& cell1, const Cell& cell2){
     }
 }
 
+std::set<Cell> Updater::grid_from_file(std::string file_name){
+    int x_start;
+    int y_start;
+
+    std::string path = "./all/";
+
+    std::ifstream file(path + file_name);
+    std::string line;
+    
+    while(getline(file, line)){
+        if (line[0] == '#') {
+            std::cout << line << '\n';
+            continue;
+        }
+
+        if(line.find('x') != std::string::npos){
+            std::stringstream ss(line);
+            char c;
+            ss >> c;
+            if(c == 'x'){
+                ss >> c;
+                int x_size;
+                ss >> x_size;
+                x_start = -x_size / 2; 
+            }
+            ss >> c; // comma
+            ss >> c;
+            if(c == 'y'){
+                ss >> c;
+                int y_size;
+                ss >> y_size;
+                y_start = y_size / 2;
+            }
+            break;
+        }
+    }
+
+    int count = 0, x = x_start, y = y_start;
+    std::set<Cell> grid;
+
+    while(getline(file, line)){
+        for(const char& c : line){
+            if(isdigit(c)){
+                count = count * 10 + (c - '0');
+                continue;
+            }
+            if(count == 0){
+                count = 1;
+            }
+
+            switch (c){
+            case 'o': // alive
+                for(int i = 0; i < count; i++){
+                    grid.insert(Cell(x, y));
+                    x++;
+                }
+                break;
+
+            case 'b': // dead
+                x += count;
+                break;
+            
+            case '$': // newline
+                y--;
+                x = x_start;
+                break;
+
+            case '!':
+                return grid;
+            }
+            count = 0;
+        }
+    }
+
+    return grid;
+
+}
+
 void Updater::insertCell(const Cell& cell, const std::set<Cell>& grid, std::set<Cell>& next_grid){
     int neighbors = 0;
     if(grid.find(Cell(cell.x - 1, cell.y + 1)) != grid.end()){

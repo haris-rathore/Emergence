@@ -1,12 +1,14 @@
 #include "application.hpp"
 
 Application::Application(int _argc, char** _argv): argc(_argc), argv(_argv) {
-    if(argc == 2){
-        // std::cout << argv[0] << '\n' << argv[1] << '\n' << argv[2] << '\n';
-        // std::stoi(argv[1]);
-        // Updater::ROWS = std::stoi(argv[1]);
-        // Updater::COLUMNS = std::stoi(argv[2]);
-        Renderer::GRID_SIZE = std::stoi(argv[1]);
+    if(argc == 3){
+        if(std::stoi(argv[1]) == 1){
+            random = true;
+            Renderer::GRID_SIZE = std::stoi(argv[2]);
+        }
+        else if(std::stoi(argv[1]) == 2){
+            file = std::string(argv[2]);
+        }
         argc = 1;
     }
     app = gtk_application_new ("org.gtk.example", G_APPLICATION_DEFAULT_FLAGS);

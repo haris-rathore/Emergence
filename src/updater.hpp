@@ -4,6 +4,9 @@
 #include <vector>
 #include <set>
 #include <mutex>
+#include <string>
+#include <sstream>
+#include <fstream>
 #include "renderer.hpp"
 
 struct Cell{
@@ -27,6 +30,7 @@ class Updater{
     inline static std::vector<unsigned int> indices;
 
     // Updater();
+    static std::set<Cell> grid_from_file(std::string file_name);
     static void insertCell(const Cell& cell, const std::set<Cell>& grid, std::set<Cell>& next_grid);
     static void nextGeneration(std::set<Cell>& grid);
     static std::vector<int> make_vertices(std::set<Cell>& grid);

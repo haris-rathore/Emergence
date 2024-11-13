@@ -1,5 +1,7 @@
 #include "renderer.hpp"
     
+
+
 void Renderer::realize(GtkWidget *widget){
     running = true;
 
@@ -7,14 +9,20 @@ void Renderer::realize(GtkWidget *widget){
     if (gtk_gl_area_get_error (GTK_GL_AREA (widget)) != NULL)
         return;
 
-    srand(time(0));
-    for(int y = 0; y < GRID_SIZE; y++){
-        for(int x = 0; x < GRID_SIZE; x++){
-            if(rand() % 2){
-                Updater::grid.insert(Cell(x, y));
+    if(Application::random){
+        srand(time(0));
+        for(int y = 0; y < GRID_SIZE; y++){
+            for(int x = 0; x < GRID_SIZE; x++){
+                if(rand() % 2){
+                    Updater::grid.insert(Cell(x, y));
+                }
             }
         }
     }
+    else{
+        Updater::grid = Updater::grid_from_file(Application::file);
+    }
+    
 
     render_data to_push;
     to_push.vertices = Updater::make_vertices(Updater::grid);

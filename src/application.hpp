@@ -16,6 +16,8 @@ class Application{
     public:
     GtkApplication* app;
     inline static GtkWidget* gl_area;
+    inline static bool random = false;
+    inline static std::string file;
     inline static int _width = 800;
     inline static int _height = 800;
     inline static std::queue<render_data> Queue;
